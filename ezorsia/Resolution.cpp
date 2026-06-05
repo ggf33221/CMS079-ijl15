@@ -13,6 +13,17 @@ unsigned int m_nBackgrndWidth;
 unsigned int  m_nBackgrnd2Width;
 int reloading = 0;
 bool isSetting = false;
+bool defaultResolutionApplied = false;
+
+static void LogResolution(const char* msg) {
+	HANDLE h = CreateFileA("ijl15.log", GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (h == INVALID_HANDLE_VALUE) return;
+	SetFilePointer(h, 0, NULL, FILE_END);
+	DWORD written = 0;
+	WriteFile(h, msg, (DWORD)lstrlenA(msg), &written, NULL);
+	WriteFile(h, "\r\n", 2, &written, NULL);
+	CloseHandle(h);
+}
 
 tsl::robin_map<int, std::vector<int>> resolutionOption;
 const char* resolution[] = {
@@ -90,6 +101,17 @@ int checkUpdateResolution() {
 	auto setting = Memory::getAddress(0x00BDD494, { 0x7C });
 	if (setting) {
 		auto option = (int)*setting;
+		if (!defaultResolutionApplied && !isSetting) {
+			defaultResolutionApplied = true;
+			if (option == 0 && Client::DefaultResolution != 0
+				&& resolutionOption.find(Client::DefaultResolution) != resolutionOption.end()) {
+				option = Client::DefaultResolution;
+				*setting = option;
+				char buf[128];
+				sprintf_s(buf, "[ijl15] DefaultResolution applied to setting: option=%d", option);
+				LogResolution(buf);
+			}
+		}
 		if (resolutionOption.find(option) == resolutionOption.end()) {
 			option = Client::DefaultResolution;
 			if (option < 0 || option >= resolutionOption.size() || resolutionOption.find(option) == resolutionOption.end()) {
@@ -100,6 +122,9 @@ int checkUpdateResolution() {
 		std::vector<int> resolution = resolutionOption[option];
 		auto gameWidth = Memory::getAddress(0x00BE2788, { 32 });
 		if (Resolution::m_nGameWidth != resolution[0] || (gameWidth != NULL && *gameWidth != resolution[0])) {
+			char buf[128];
+			sprintf_s(buf, "[ijl15] UpdateResolution option=%d size=%dx%d", option, resolution[0], resolution[1]);
+			LogResolution(buf);
 			Resolution::UpdateResolution(resolution[0], resolution[1]);
 			return 1;
 		}
