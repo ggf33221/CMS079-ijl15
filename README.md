@@ -41,7 +41,7 @@
 
 - 支持WZ与IMG模式
 - 支持动态分辨率(可在系统设置中切换)
-- 支持伤害皮肤(支持加载外置文件[Effect/DamageSkin.img](https://github.com/Willh92/079-ijl15/releases/download/1.0.0/DamageSkin.img)或[Custom.wz](https://github.com/Willh92/079-ijl15/releases/download/1.0.0/Custom.wz))
+- 支持伤害皮肤以及单位显示(支持加载外置文件[Effect/DamageSkin.img](https://github.com/Willh92/079-ijl15/releases/download/1.0.0/DamageSkin.img)或[Custom.wz](https://github.com/Willh92/079-ijl15/releases/download/1.0.0/Custom.wz))
 - 支持动态伤害皮肤加载(仅支持显示)
 - 支持长键盘(支持加载外置文件[UI/QuickSlot.img](https://github.com/Willh92/079-ijl15/releases/download/1.0.0/QuickSlot.img)或[Custom.wz](https://github.com/Willh92/079-ijl15/releases/download/1.0.0/Custom.wz)，支持多种键位配置)
 - 支持198开头的的TamingMob
@@ -51,7 +51,7 @@
 - 支持部分inlink和outlink节点(默认使用新方法，如遇启动问题设置linkNodeNew=false)
 - 支持ItemEff.img里头的特效(可用0xAA包头或ItemEffect激活)
 - 支持伤害上限破功值动态修改(通过在`MapleStat`新增`DAMAGELIMIT(8388608)`枚举值,参考伤害皮肤状态实现)
-- 支持内存防爆
+- 支持内存防爆(搭配4G客户端效果更佳[MapleStory4G.exe](https://github.com/Willh92/079-ijl15/releases/download/1.0.0/MapleStory4G.exe))
 - 支持快捷二段跳（双击跳跃键）/向上二段跳（按住方向上键）
 - 支持高版本宠物装备佩戴（替换佩戴校验算法）
 - 支持替换装备卷轴使用算法(支持204与261开头的所有卷轴，开启时候需注意装备类型与卷轴在服务端的校验)

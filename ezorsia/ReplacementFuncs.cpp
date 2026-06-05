@@ -115,6 +115,19 @@ bool Hook_gethostbyname(bool bEnable)
 
 	decltype(&gethostbyname) Hook = [](const char* name) -> hostent*
 		{
+			{
+				HANDLE h = CreateFileA("ijl15.log", GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				if (h != INVALID_HANDLE_VALUE) {
+					SetFilePointer(h, 0, NULL, FILE_END);
+					DWORD written;
+					const char* msg = "[ijl15] gethostbyname hook HIT: ";
+					WriteFile(h, msg, (DWORD)strlen(msg), &written, NULL);
+					WriteFile(h, name, (DWORD)strlen(name), &written, NULL);
+					const char* nl = "\r\n";
+					WriteFile(h, nl, 2, &written, NULL);
+					CloseHandle(h);
+				}
+			}
 			if (!Client::canInjected) {
 				std::unique_lock<std::mutex> lock(Client::injected);
 				if (!Client::canInjected) {
@@ -125,17 +138,18 @@ bool Hook_gethostbyname(bool bEnable)
 				lock.unlock();
 				std::cout << "Injected initialized" << std::endl;
 			}
-			//if (Client::ServerIP_Address_hook && strncmp(name, "mxdlogin", strlen("mxdlogin")) == 0)
-			//{
+			if (strncmp(name, "mxdlogin", strlen("mxdlogin")) == 0)
+			{
+				return nullptr;
 				//if (strncmp(name, "mxdlogin.", strlen("mxdlogin.")) == 0) {
 				//	std::cout << "Hook_gethostbyname: " << name << " ignore" << std::endl;   //ingore first call
 				//}
 				//else {
-			//	const char* serverIP_Address = Client::ServerIP_AddressFromINI.c_str();
-			//	std::cout << "Hook_gethostbyname: " << name << " -> " << serverIP_Address << std::endl;
-			//	return _gethostbyname(serverIP_Address);
+				//	const char* serverIP_Address = Client::ServerIP_AddressFromINI.c_str();
+				//	std::cout << "Hook_gethostbyname: " << name << " -> " << serverIP_Address << std::endl;
+				//	return _gethostbyname(serverIP_Address);
 				//}
-			//}
+			}
 			return _gethostbyname(name);
 		};
 
@@ -187,7 +201,7 @@ bool Hook_StringPool__GetString(bool bEnable)	//hook stringpool modification //t
 				break;
 				//case 233:
 					//if(Client::longEXP)
-					//	*ret = ("µÃµ½¾­ÑéÖµ (+%ld)"); break;
+					//	*ret = ("ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½Öµ (+%ld)"); break;
 					//case 1307:	//1307_UI_LOGINIMG_COMMON_FRAME = 51Bh
 					//	if (EzorsiaV2WzIncluded && !ownLoginFrame) {
 					//		switch (Client::m_nGameWidth)

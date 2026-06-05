@@ -898,6 +898,10 @@ void _UpdateResolution(int nScreenWidth, int nScreenHeight) {
 	nCollegeDialogX = nScreenWidth / 2 - 289;
 	nCollegeDialogY = nScreenHeight / 2 - 193;
 	Memory::CodeCave(collegeDialog, 0x008210CE, 9);
+
+	//窗口保存位置
+	Memory::WriteInt(0x0049E0CF + 1, nScreenWidth - 16);// 窗口保存位置边界 x
+	Memory::WriteInt(0x0049E11F + 1, nScreenHeight - 16);// 窗口保存位置边界 y
 }
 
 void Resolution::UpdateSlotPosition(int width) {

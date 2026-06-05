@@ -4,6 +4,8 @@
 #include "INIReader.h"
 #include "ReplacementFuncs.h"
 #include <comutil.h>
+#include <windows.h>
+#include <stdio.h>
 #include "BossHP.h"
 #include <Resman.h>
 #include <CharacterEx.h>
@@ -14,13 +16,32 @@
 #include "CreateDump.h"
 #include "AutoDump.h"
 
+// Simple file logger for diagnostics
+static void LogIjl15(const char* msg) {
+    HANDLE h = CreateFileA("ijl15.log", GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return;
+    SetFilePointer(h, 0, NULL, FILE_END);
+    DWORD written;
+    DWORD len = (DWORD)strlen(msg);
+    WriteFile(h, msg, len, &written, NULL);
+    const char* nl = "\r\n";
+    WriteFile(h, nl, 2, &written, NULL);
+    CloseHandle(h);
+}
+
 CAutoDump* autoDump = nullptr;
 
 void Init()
 {
+	LogIjl15("[ijl15] Init() started");
+
 	INIReader reader("config.ini");
 	if (reader.ParseError() == 0) {
+		LogIjl15("[ijl15] config.ini parsed OK");
 		Client::DefaultResolution = reader.GetInteger("general", "DefaultResolution", Client::DefaultResolution);
+		char buf[64];
+		sprintf_s(buf, "[ijl15] DefaultResolution=%d", (int)Client::DefaultResolution);
+		LogIjl15(buf);
 		Client::MsgAmount = reader.GetInteger("general", "MsgAmount", Client::MsgAmount);
 		Client::WindowedMode = reader.GetBoolean("general", "WindowedMode", Client::WindowedMode);
 		Client::RemoveLogos = reader.GetBoolean("general", "RemoveLogos", Client::RemoveLogos);
@@ -33,8 +54,8 @@ void Init()
 		Client::ResFlushTimeInterval = reader.GetInteger("general", "ResFlushTimeInterval", Client::ResFlushTimeInterval);
 		Client::ResManFlushCached = reader.GetInteger("general", "ResManFlushCached", Client::ResManFlushCached);
 		Client::SetWorkingSetSize = reader.GetInteger("general", "SetWorkingSetSize", Client::SetWorkingSetSize);
-		//Client::setDamageCap = reader.GetReal("optional", "setDamageCap", Client::setDamageCap);//Îï¹¥Ãæ°å
-		//Client::setMAtkCap = reader.GetReal("optional", "setMAtkCap", Client::setMAtkCap);//Ä§¹¥Ä§·ÀÃæ°å
+		//Client::setDamageCap = reader.GetReal("optional", "setDamageCap", Client::setDamageCap);//ï¿½ï¹¥ï¿½ï¿½ï¿½
+		//Client::setMAtkCap = reader.GetReal("optional", "setMAtkCap", Client::setMAtkCap);//Ä§ï¿½ï¿½Ä§ï¿½ï¿½ï¿½ï¿½ï¿½
 		Client::setAccCap = reader.GetReal("optional", "setAccCap", Client::setAccCap);
 		Client::setAvdCap = reader.GetReal("optional", "setAvdCap", Client::setAvdCap);
 		Client::setAtkOutCap = reader.GetReal("optional", "setAtkOutCap", Client::setAtkOutCap);
@@ -90,12 +111,16 @@ void Init()
 		autoDump = new CAutoDump();
 	}
 	CheckMonitorRefreshRate();
-	Hook_CreateMutexA(true); //multiclient //ty darter, angel, and alias!
-	HookCreateWindowExA(true);
+	// DISABLED: conflicts with Hook.dll's AntiCheat removal + MultiClient
+	// Hook_CreateMutexA(true);
+	// DISABLED: conflicts with Hook.dll's CreateWindowExA hook
+	// HookCreateWindowExA(true);
 	HeapCreateEx::HOOK_HeapCreate();
 	Hook_gethostbyname(true);
+	LogIjl15("[ijl15] Hook_gethostbyname installed");
 	Hook_connect(Client::ServerIP_Address_hook);
 	TimerTask(CreateHook, 10);
+	LogIjl15("[ijl15] Init() done, TimerTask started");
 }
 
 void CreateConsole() {
@@ -106,16 +131,21 @@ void CreateConsole() {
 
 bool CreateHook()
 {
+	LogIjl15("[ijl15] CreateHook() called");
 	if (Client::isInjected)
 	{
+		LogIjl15("[ijl15] CreateHook() already injected, returning");
 		Client::injectedCondition.notify_all();
 		return true;
 	}
+	LogIjl15("[ijl15] CreateHook() waiting for canInjected");
 	std::unique_lock<std::mutex> lock(Client::injected);
 	if (!Client::canInjected) {
 		std::cout << "CreateHook invoke wait can inject" << std::endl;
+		LogIjl15("[ijl15] waiting on condition variable...");
 		Client::injectedCondition.wait(lock, [] {return Client::canInjected; });
 	}
+	LogIjl15("[ijl15] CreateHook() proceed past wait, starting injection");
 	std::cout << "CreateHook invoke inject start" << std::endl;
 	Hook_StringPool__GetString(true); //hook stringpool modification //ty !! popcorn //ty darter
 	Hook_StringPool__GetStringW(true);
@@ -142,6 +172,7 @@ bool CreateHook()
 	ijl15::CreateHook(); //NMCO::CreateHook();
 	TimerTask(Client::EmptyMemory, Client::ResCheckTime);
 	std::cout << "CreateHook invoke inject successed" << std::endl;
+	LogIjl15("[ijl15] CreateHook() injection SUCCESS");
 	Client::isInjected = true;
 	Client::injectedCondition.notify_all();
 	lock.unlock();
@@ -154,6 +185,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
 	{
+		LogIjl15("[ijl15] DllMain DLL_PROCESS_ATTACH");
 		Init();
 		break;
 	}
