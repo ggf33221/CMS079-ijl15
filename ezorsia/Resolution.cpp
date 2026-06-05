@@ -103,12 +103,11 @@ int checkUpdateResolution() {
 		auto option = (int)*setting;
 		if (!defaultResolutionApplied && !isSetting) {
 			defaultResolutionApplied = true;
-			if (option == 0 && Client::DefaultResolution != 0
-				&& resolutionOption.find(Client::DefaultResolution) != resolutionOption.end()) {
+			if (resolutionOption.find(Client::DefaultResolution) != resolutionOption.end()) {
 				option = Client::DefaultResolution;
 				*setting = option;
 				char buf[128];
-				sprintf_s(buf, "[ijl15] DefaultResolution applied to setting: option=%d", option);
+				sprintf_s(buf, "[ijl15] Launcher DefaultResolution applied to setting: option=%d", option);
 				LogResolution(buf);
 			}
 		}
